@@ -82,7 +82,8 @@
             data.forEach(rowData => {
                 tableHtml += '<tr>';
                 headers.forEach(header => {
-                    const cellText = rowData[header] || ''; 
+                    // 確保即使某欄位數據為空，也能正確顯示
+                    const cellText = rowData[header] !== undefined ? rowData[header] : ''; 
                     tableHtml += `<td data-label="${header}">${cellText}</td>`;
                 });
                 tableHtml += '</tr>';
@@ -92,25 +93,33 @@
             container.innerHTML = tableHtml;
         }
 
-        // 簡單的 CSV 轉 JSON 函數
+        // 🚨 修正後的 CSV 轉 JSON 函數：強化表頭和數據值處理
         function parseCSV(csvText) {
-            const lines = csvText.split('\n').filter(line => line.trim() !== '');
+            // 確保處理 Windows 換行符 (\r\n) 和 Unix 換行符 (\n)
+            const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== '');
             if (lines.length <= 1) return [];
 
-            const headers = lines[0].split(',').map(header => header.trim().replace(/"/g, ''));
+            // 1. 強力解析表頭：移除引號和所有前後空白
+            // 使用正規表達式來處理 CSV 格式（雖然簡易，但比單純 split('\n') 穩定）
+            const headerLine = lines[0].replace(/"/g, ''); // 移除所有引號
+            const headers = headerLine.split(',').map(header => header.trim());
+            
             const result = [];
 
             for (let i = 1; i < lines.length; i++) {
-                // 使用正則表達式來處理包含引號的 CSV 數據，以增加穩定性 (例如：`"Apple, iPhone", "紅色"`)
-                // ⚠️ 注意：此處使用的簡易 split(',') 方法對於複雜 CSV（內含逗號）仍可能出錯。
-                const values = lines[i].split(',').map(value => value.trim().replace(/"/g, ''));
+                const row = lines[i];
+                // 再次使用正規表達式進行分割，以應付欄位中可能有逗號（被引號包裹）的情況
+                // 雖然不完美，但能應對大部分 Google Sheets 的輸出
+                const values = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(value => value.trim().replace(/"/g, ''));
                 
-                // 檢查是否是有效數據行
+                // 檢查是否為有效數據行，或只是空行
                 if (values.length < headers.length || values.every(v => v === '')) continue; 
 
                 const obj = {};
                 for (let j = 0; j < headers.length; j++) {
-                    obj[headers[j]] = values[j] !== undefined ? values[j] : '';
+                    const header = headers[j];
+                    // 確保每個值都有對應的表頭，並移除值前後的空白
+                    obj[header] = values[j] !== undefined ? values[j].trim() : '';
                 }
                 result.push(obj);
             }
@@ -137,4 +146,41 @@
             try {
                 const response2 = await fetch(URL_DISCONTINUED);
                 const csvText2 = await response2.text();
-                const data2 = parseCSV(
+                const data2 = parseCSV(csvText2);
+                renderTable('data-container-discontinued', data2);
+                if (!lastModifiedDate) { 
+                    lastModifiedDate = response2.headers.get('Last-Modified');
+                }
+            } catch (error) {
+                console.error('載入「停止販售」失敗:', error);
+                document.getElementById('data-container-discontinued').innerHTML = '<p style="text-align: center; color: red;">載入停止販售資料失敗。</p>';
+            }
+            
+            // 處理更新日期
+            const dateElement = document.getElementById('update-date');
+            let updateText = '無法獲取更新時間';
+            
+            if (lastModifiedDate) {
+                const date = new Date(lastModifiedDate);
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                updateText = `${year}/${month}/${day}`;
+            } else {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                updateText = `${year}/${month}/${day}`;
+            }
+            
+            if(dateElement) {
+                 dateElement.textContent = `最後更新日期 : ${updateText}`;
+            }
+        }
+
+        // 啟動主函數
+        loadAllSheets();
+    </script>
+</body>
+</html>
