@@ -1,224 +1,79 @@
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>產品供貨情形</title>
-    <style>
+<style>
         /* ==================== 基礎與電腦版樣式 ==================== */
         body { font-family: Arial, sans-serif; margin: 30px; background-color: #f9f9f9; } 
-        h1 { text-align: center; color: #196b24; font-size: 24pt; } 
+        h1 { text-align: center; color: #196b24; font-size: 28pt; } 
         
-        /* 標題與說明文字的字體大小調整 */
-        .section-title { color: #196b24; font-size: 20pt; font-weight: bold; margin-top: 35px; text-align: center; }
-        .section-desc { color: #5e5e5e; font-size: 16pt; text-align: center; margin-bottom: 30px; }
+        .section-title { color: #196b24; font-size: 25pt; font-weight: bold; margin-top: 35px; text-align: center; }
+        .section-desc { color: #5e5e5e; font-size: 19pt; text-align: center; margin-bottom: 30px; }
         #update-date { text-align: center; margin-top: 40px; font-size: 16pt; color: #555; }
 
-        /* 表格基礎樣式 */
         table { width: 100%; border-collapse: collapse; margin-bottom: 35px; table-layout: auto; } 
-        th, td { border: 1px solid #ddd; padding: 18px; text-align: center; font-size: 16px; word-wrap: break-word; }
+        th, td { border: 1px solid #ddd; padding: 18px; text-align: center; font-size: 22px; word-wrap: break-word; }
         th { background-color: #f2f2f2; }
 
 
         /* ==================== 手機響應式樣式 (< 768px) ==================== */
         @media screen and (max-width: 768px) {
             
-            body { margin: 12px; } 
+            body { margin: 15px; } 
             
+            /* 讓表格居中，保持 90% 寬度（如果不需要居中請移除 margin: 0 auto;） */
+            table {
+                max-width: 90%; 
+                width: 100%;    
+                margin: 0 auto 20px auto; 
+                border: none; 
+            }
+
             /* 1. 確保所有表格相關元素都視為區塊，才能正確垂直堆疊 */
             table, thead, tbody, th, td, tr { display: block; }
             
-            /* 2. 徹底隱藏標準表頭 (thead tr 和 th) */
+            /* 2. 徹底隱藏標準表頭 (解決重複問題) */
             thead tr { 
                 position: absolute; 
                 top: -9999px; 
                 left: -9999px; 
             }
-            th { display: none; } /* 額外確保 th 被隱藏 */
+            th { display: none !important; } 
             
-            /* 3. 調整每一行 (<tr>) 的顯示，提供間距並解決重疊 */
+            /* 3. 調整每一行 (<tr>) 的顯示，提供間距 (解決重疊問題) */
             tr { 
                 border: 1px solid #ccc; 
-                margin-bottom: 20px; 
+                margin-bottom: 15px; /* 稍微減少行與行之間的間距 */
+                height: auto; 
             }
             
-            /* 4. 調整每個儲存格（欄位）的樣式 */
+            /* 4. 調整每個儲存格（欄位）的樣式 (核心修正區域) */
             td { 
                 border: none; 
                 border-bottom: 1px solid #eee; 
                 position: relative; 
-                padding-left: 50%; /* 為標籤騰出空間 */
+                padding-left: 50%; 
                 text-align: right; 
-                font-size: 12px; 
-                /* 確保 td 本身有足夠的最小高度 */
-                min-height: 40px; 
+                font-size: 17px; /* 稍微減少字體大小 */
+                min-height: 0; /* 移除最小高度限制 */
+                
+                /* 💥 核心修正：大幅減少垂直內邊距 */
+                padding-top: 5px; 
+                padding-bottom: 5px; 
+                padding-right: 10px; /* 減少右邊距，讓內容更靠邊 */
             }
             
-            /* 5. 確保 data-label 不會與內容重疊 */
+            /* 5. 顯示自定義的 data-label 標籤 */
             td:before { 
                 content: attr(data-label) ":"; 
                 position: absolute; 
+                /* 使用 top/bottom/margin 確保標籤在減少 padding 後仍能居中 */
+                top: 50%; 
+                transform: translateY(-50%); 
                 left: 10px; 
                 width: 45%; 
-                white-space: normal; /* 允許標籤換行，避免太長溢出 */
-                word-wrap: break-word; /* 強制長單字換行 */
+                white-space: normal; 
+                word-wrap: break-word; 
                 font-weight: bold; 
-                font-size: 12px; 
+                font-size: 16px; /* 稍微減少標籤字體大小 */
                 text-align: left; 
                 color: #333; 
             }
         }
     </style>
-</head>
-<body>
-    <h1>產品供貨情形</h1>
-    
-    <div class="section-title">暫時性缺貨</div>
-    <p class="section-desc">以下產品銷售熱烈供貨不及，即將暫停供應，正確結束日期可能會根據實際銷售狀況異動，敬請見諒。 如果您的自選預備訂單包含以下產品，請至官網→ 預備訂單更改，或撥打02-8787-5442由專人為您服務。</p>
-    
-    <div id="data-container-temporary">
-        <p style="text-align: center;">資料載入中...</p>
-    </div>
-    
-    <div class="section-title" style="margin-top: 50px;">停止販售</div>
-    <p class="section-desc"> 感謝您的愛用，以下產品已售完，銷售完畢後不再供貨，謝謝！</p>
-    
-    <div id="data-container-discontinued">
-        <p style="text-align: center;">資料載入中...</p>
-    </div>
-    
-    <p id="update-date"></p>
-
-    <script>
-        // 🚨 數據連結定義 (使用您提供的 GID)
-        const BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSfLe7v1HVWF-H0fLihDiBfl5kY7ux-WNsBIASi4xF9Oj9CzGiKPZAoETBStCnKFHWPc7WEqwfLf4Fs/pub?single=true&output=csv';
-
-        // 暫時性缺貨 (gid=0)
-        const URL_TEMPORARY = BASE_URL + '&gid=0';
-        
-        // 停止販售 (gid=2638866)
-        const URL_DISCONTINUED = BASE_URL + '&gid=2638866'; 
-
-        // ----------------------------------------------------
-        // 數據渲染核心函數
-        // ----------------------------------------------------
-
-        // 渲染單一表格
-        function renderTable(containerId, data) {
-            const container = document.getElementById(containerId);
-            if (!data || data.length === 0 || Object.keys(data[0]).length === 0) {
-                container.innerHTML = '<p style="text-align: center;">無產品資料。</p>';
-                return;
-            }
-
-            const headers = Object.keys(data[0]);
-            let tableHtml = '<table><thead><tr>';
-            
-            // 1. 生成表頭 (<thead>)
-            headers.forEach(header => {
-                tableHtml += `<th>${header}</th>`;
-            });
-            tableHtml += '</tr></thead><tbody>';
-
-            // 2. 生成資料列 (<tbody>)
-            data.forEach(rowData => {
-                tableHtml += '<tr>';
-                headers.forEach(header => {
-                    const cellText = rowData[header] !== undefined ? rowData[header] : ''; 
-                    const cleanHeader = header.trim();
-                    tableHtml += `<td data-label="${cleanHeader}">${cellText}</td>`;
-                });
-                tableHtml += '</tr>';
-            });
-
-            tableHtml += '</tbody></table>';
-            container.innerHTML = tableHtml;
-        }
-
-        // 強化後的 CSV 轉 JSON 函數
-        function parseCSV(csvText) {
-            const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== '');
-            if (lines.length <= 1) return [];
-
-            // 1. 強力解析表頭：移除引號和所有前後空白
-            const headerLine = lines[0].replace(/"/g, '');
-            const headers = headerLine.split(',').map(header => header.trim());
-            
-            const result = [];
-
-            for (let i = 1; i < lines.length; i++) {
-                const row = lines[i];
-                // 使用正規表達式進行分割
-                const values = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(value => value.trim().replace(/"/g, ''));
-                
-                if (values.length < headers.length || values.every(v => v === '')) continue; 
-
-                const obj = {};
-                for (let j = 0; j < headers.length; j++) {
-                    const header = headers[j];
-                    obj[header] = values[j] !== undefined ? values[j].trim() : '';
-                }
-                result.push(obj);
-            }
-            return result;
-        }
-
-        // 主加載函數
-        async function loadAllSheets() {
-            let lastModifiedDate = null;
-            
-            // 處理第一個工作表
-            try {
-                const response1 = await fetch(URL_TEMPORARY);
-                const csvText1 = await response1.text();
-                const data1 = parseCSV(csvText1);
-                renderTable('data-container-temporary', data1);
-                lastModifiedDate = response1.headers.get('Last-Modified');
-            } catch (error) {
-                console.error('載入「暫時性缺貨」失敗:', error);
-                document.getElementById('data-container-temporary').innerHTML = '<p style="text-align: center; color: red;">載入暫時性缺貨資料失敗。</p>';
-            }
-
-            // 處理第二個工作表
-            try {
-                const response2 = await fetch(URL_DISCONTINUED);
-                const csvText2 = await response2.text();
-                const data2 = parseCSV(csvText2);
-                renderTable('data-container-discontinued', data2);
-                if (!lastModifiedDate) { 
-                    lastModifiedDate = response2.headers.get('Last-Modified');
-                }
-            } catch (error) {
-                console.error('載入「停止販售」失敗:', error);
-                document.getElementById('data-container-discontinued').innerHTML = '<p style="text-align: center; color: red;">載入停止販售資料失敗。</p>';
-            }
-            
-            // 處理更新日期
-            const dateElement = document.getElementById('update-date');
-            let updateText = '無法獲取更新時間';
-            
-            if (lastModifiedDate) {
-                const date = new Date(lastModifiedDate);
-                const year = date.getFullYear();
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const day = String(date.getDate()).padStart(2, '0');
-                updateText = `${year}/${month}/${day}`;
-            } else {
-                const now = new Date();
-                const year = now.getFullYear();
-                const month = String(now.getMonth() + 1).padStart(2, '0');
-                const day = String(now.getDate()).padStart(2, '0');
-                updateText = `${year}/${month}/${day}`;
-            }
-            
-            if(dateElement) {
-                 dateElement.textContent = `最後更新日期 : ${updateText}`;
-            }
-        }
-
-        // 啟動主函數
-        loadAllSheets();
-    </script>
-</body>
-</html>
-
