@@ -15,7 +15,7 @@
         #update-date { text-align: center; margin-top: 40px; font-size: 16pt; color: #555; }
 
         /* 表格基礎樣式 */
-        table { width: 100%; border-collapse: collapse; margin-bottom: 35px; table-layout: auto; } /* 移除 fixed 確保內容足夠空間 */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 35px; table-layout: auto; } 
         th, td { border: 1px solid #ddd; padding: 18px; text-align: center; font-size: 22px; word-wrap: break-word; }
         th { background-color: #f2f2f2; }
 
@@ -25,24 +25,24 @@
             
             body { margin: 15px; } 
             
-            /* 💥 關鍵修正：確保所有表格相關元素都視為區塊，才能正確垂直堆疊 */
+            /* 1. 確保所有表格相關元素都視為區塊，才能正確垂直堆疊 */
             table, thead, tbody, th, td, tr { display: block; }
             
-            /* 隱藏標準表頭 */
+            /* 2. 徹底隱藏標準表頭 (thead tr 和 th) */
             thead tr { 
                 position: absolute; 
                 top: -9999px; 
                 left: -9999px; 
             }
+            th { display: none; } /* 額外確保 th 被隱藏 */
             
-            /* 調整每一行的顯示 */
+            /* 3. 調整每一行 (<tr>) 的顯示，提供間距並解決重疊 */
             tr { 
                 border: 1px solid #ccc; 
-                /* 💥 關鍵修正：增加間距並確保行可以擴展 */
                 margin-bottom: 20px; 
             }
             
-            /* 調整每個儲存格（欄位）的樣式 */
+            /* 4. 調整每個儲存格（欄位）的樣式 */
             td { 
                 border: none; 
                 border-bottom: 1px solid #eee; 
@@ -50,20 +50,18 @@
                 padding-left: 50%; /* 為標籤騰出空間 */
                 text-align: right; 
                 font-size: 18px; 
+                /* 確保 td 本身有足夠的最小高度 */
+                min-height: 40px; 
             }
             
-            /* 💥 修正：確保 td 內容不會跑到下一行的 data-label 上 */
-            td:last-child {
-                border-bottom: none; /* 最後一格移除底線 */
-            }
-
-            /* 顯示自定義的 data-label 標籤 */
+            /* 5. 確保 data-label 不會與內容重疊 */
             td:before { 
                 content: attr(data-label) ":"; 
                 position: absolute; 
                 left: 10px; 
                 width: 45%; 
-                white-space: nowrap; 
+                white-space: normal; /* 允許標籤換行，避免太長溢出 */
+                word-wrap: break-word; /* 強制長單字換行 */
                 font-weight: bold; 
                 font-size: 17px; 
                 text-align: left; 
@@ -145,3 +143,81 @@
             // 1. 強力解析表頭：移除引號和所有前後空白
             const headerLine = lines[0].replace(/"/g, '');
             const headers = headerLine.split(',').map(header => header.trim());
+            
+            const result = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const row = lines[i];
+                // 使用正規表達式進行分割
+                const values = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(value => value.trim().replace(/"/g, ''));
+                
+                if (values.length < headers.length || values.every(v => v === '')) continue; 
+
+                const obj = {};
+                for (let j = 0; j < headers.length; j++) {
+                    const header = headers[j];
+                    obj[header] = values[j] !== undefined ? values[j].trim() : '';
+                }
+                result.push(obj);
+            }
+            return result;
+        }
+
+        // 主加載函數
+        async function loadAllSheets() {
+            let lastModifiedDate = null;
+            
+            // 處理第一個工作表
+            try {
+                const response1 = await fetch(URL_TEMPORARY);
+                const csvText1 = await response1.text();
+                const data1 = parseCSV(csvText1);
+                renderTable('data-container-temporary', data1);
+                lastModifiedDate = response1.headers.get('Last-Modified');
+            } catch (error) {
+                console.error('載入「暫時性缺貨」失敗:', error);
+                document.getElementById('data-container-temporary').innerHTML = '<p style="text-align: center; color: red;">載入暫時性缺貨資料失敗。</p>';
+            }
+
+            // 處理第二個工作表
+            try {
+                const response2 = await fetch(URL_DISCONTINUED);
+                const csvText2 = await response2.text();
+                const data2 = parseCSV(csvText2);
+                renderTable('data-container-discontinued', data2);
+                if (!lastModifiedDate) { 
+                    lastModifiedDate = response2.headers.get('Last-Modified');
+                }
+            } catch (error) {
+                console.error('載入「停止販售」失敗:', error);
+                document.getElementById('data-container-discontinued').innerHTML = '<p style="text-align: center; color: red;">載入停止販售資料失敗。</p>';
+            }
+            
+            // 處理更新日期
+            const dateElement = document.getElementById('update-date');
+            let updateText = '無法獲取更新時間';
+            
+            if (lastModifiedDate) {
+                const date = new Date(lastModifiedDate);
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                updateText = `${year}/${month}/${day}`;
+            } else {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                updateText = `${year}/${month}/${day}`;
+            }
+            
+            if(dateElement) {
+                 dateElement.textContent = `最後更新日期 : ${updateText}`;
+            }
+        }
+
+        // 啟動主函數
+        loadAllSheets();
+    </script>
+</body>
+</html>
