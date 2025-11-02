@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>產品供貨情形</title>
+    <style>
+        /* 您的所有 CSS 樣式 (包含 @media queries) 貼在此處 */
+        body { font-family: Arial, sans-serif; margin: 30px; background-color: #f9f9f9; } 
+        h1 { text-align: center; color: #196b24; font-size: 30pt; } 
+        /* ... 其他樣式 ... */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 35px; } 
+        th, td { border: 1px solid #ddd; padding: 18px; text-align: center; font-size: 24px; } 
+        /* ... 手機版 @media 樣式 ... */
+        @media screen and (max-width: 768px) {
+            /* ... 手機版 CSS 貼在此處 ... */
+            thead tr { position: absolute; top: -9999px; left: -9999px; }
+            tr { border: 1px solid #ccc; margin-bottom: 20px; } 
+            td { border: none; border-bottom: 1px solid #eee; position: relative; padding-left: 50%; text-align: right; }
+            td:before { content: attr(data-label) ":"; /* 關鍵的 data-label 讀取 */
+                        position: absolute; left: 10px; width: 45%; white-space: nowrap; 
+                        font-weight: bold; font-size: 19px; text-align: left; color: #333; 
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>產品供貨情形</h1>
+    
+    <div style="color: #196b24; font-size: 27pt; font-weight: bold; margin-top: 35px; text-align: center;">暫時性缺貨</div>
+    <p style="color: #5e5e5e; font-size: 21pt; text-align: center; margin-bottom: 35px;">以下產品銷售熱烈供貨不及，即將暫停供應，正確結束日期可能會根據實際銷售狀況異動，敬請見諒。 如果您的自選預備訂單包含以下產品，請至官網→ 預備訂單更改，或撥打02-8787-5442由專人為您服務。</p>
+    
+    <div id="data-container">
+        <p style="text-align: center;">資料載入中...</p>
+    </div>
+    
+    <div style="color: #196b24; font-size: 27pt; font-weight: bold; margin-top: 50px; text-align: center;">停止販售</div>
+    <p style="color: #5e5e5e; font-size: 21pt; text-align: center; margin-bottom: 30px;"> 感謝您的愛用，以下產品售完為止，未來不再供貨，謝謝！/p>
+    
+    <p id="update-date" style="text-align: center; margin-top: 40px; font-size: 18pt; color: #555;"></p>
+
+    <script>
+        // ⚠️ 替換成您在步驟 2.1 複製的 Google Sheet 公開 CSV 連結
+        const PUBLIC_SHEET_URL = ' https://docs.google.com/spreadsheets/d/e/2PACX-1vSfLe7v1HVWF-H0fLihDiBfl5kY7ux-WNsBIASi4xF9Oj9CzGiKPZAoETBStCnKFHWPc7WEqwfLf4Fs/pub?gid=0&single=true&output=csv
+'; 
+        
+        // ⚠️ 數據載入的主函數
+        async function loadDataAndBuildTables() {
+            const container = document.getElementById('data-container');
+
+            try {
+                // 讀取 CSV 數據
+                const response = await fetch(PUBLIC_SHEET_URL);
+                const csvText = await response.text();
+                
+                // 將 CSV 轉換為 JSON 數據陣列
+                const data = parseCSV(csvText); 
+                
+                if (data.length === 0) {
+                    container.innerHTML = '<p style="text-align: center;">目前沒有產品資料。</p>';
+                    return;
+                }
+
+                // 假設您的數據只有一個表格，且表頭是 CSV 的第一行
+                const headers = Object.keys(data[0]);
+                const bodyData = data;
+                
+                let tableHtml = '<table><thead><tr>';
+                // 1. 生成表頭 (<thead>)
+                headers.forEach(header => {
+                    tableHtml += `<th>${header}</th>`;
+                });
+                tableHtml += '</tr></thead><tbody>';
+
+                // 2. 生成資料列 (<tbody>)
+                bodyData.forEach(rowData => {
+                    tableHtml += '<tr>';
+                    headers.forEach(header => {
+                        const cellText = rowData[header] || ''; // 確保單元格內容存在
+                        // 應用 data-label 屬性以實現手機版響應式設計
+                        tableHtml += `<td data-label="${header}">${cellText}</td>`;
+                    });
+                    tableHtml += '</tr>';
+                });
+
+                tableHtml += '</tbody></table>';
+                
+                // 渲染表格
+                container.innerHTML = tableHtml;
+
+                // 獲取最後更新日期 (CSV 連結不會提供，這裡使用當前時間作為近似值)
+                const dateElement = document.getElementById('update-date');
+                const lastModified = response.headers.get('Last-Modified');
+                let updateText = '無法獲取更新時間';
+                
+                if (lastModified) {
+                   // 嘗試解析伺服器提供的時間 (如果存在)
+                   const date = new Date(lastModified);
+                   updateText = date.toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '/');
+                } else {
+                   // 如果伺服器不提供，則使用當前時間作為部署/訪問時間
+                   const now = new Date();
+                   updateText = now.toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '/');
+                }
+                dateElement.textContent = `最後更新日期 : ${updateText}`;
+
+
+            } catch (error) {
+                console.error('載入資料失敗:', error);
+                container.innerHTML = '<p style="text-align: center;">資料載入錯誤，請檢查 Google Sheet 公開連結或網路設定。</p>';
+            }
+        }
+        
+        // 簡單的 CSV 轉 JSON 函數 (從網路上找到的通用實作)
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n').filter(line => line.trim() !== '');
+            if (lines.length === 0) return [];
+
+            // 簡單處理：用逗號分隔，並移除首尾空白
+            const headers = lines[0].split(',').map(header => header.trim().replace(/"/g, ''));
+            const result = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(value => value.trim().replace(/"/g, ''));
+                if (values.length !== headers.length) continue; // 跳過不完整的行
+
+                const obj = {};
+                for (let j = 0; j < headers.length; j++) {
+                    obj[headers[j]] = values[j];
+                }
+                result.push(obj);
+            }
+            return result;
+        }
+
+        // 啟動主函數
+        loadDataAndBuildTables();
+    </script>
+</body>
+</html>
