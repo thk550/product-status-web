@@ -184,3 +184,54 @@
                 const response1 = await fetch(URL_TEMPORARY);
                 if (!response1.ok) throw new Error(`HTTP Error: ${response1.status}`);
                 const csvText1 = await response1.text();
+                const data1 = parseCSV(csvText1);
+                renderTable('data-container-temporary', data1);
+                lastModifiedDate = response1.headers.get('Last-Modified');
+            } catch (error) {
+                console.error('載入「暫時性缺貨」失敗:', error);
+                document.getElementById('data-container-temporary').innerHTML = `<p style="text-align: center; color: red;">載入暫時性缺貨資料失敗。請檢查 Google Sheets 連結。錯誤: ${error.message || error.toString()}</p>`;
+            }
+
+            // 處理第二個工作表
+            try {
+                const response2 = await fetch(URL_DISCONTINUED);
+                if (!response2.ok) throw new Error(`HTTP Error: ${response2.status}`);
+                const csvText2 = await response2.text();
+                const data2 = parseCSV(csvText2);
+                renderTable('data-container-discontinued', data2);
+                if (!lastModifiedDate) { 
+                    lastModifiedDate = response2.headers.get('Last-Modified');
+                }
+            } catch (error) {
+                console.error('載入「停止販售」失敗:', error);
+                document.getElementById('data-container-discontinued').innerHTML = `<p style="text-align: center; color: red;">載入停止販售資料失敗。請檢查 Google Sheets 連結或 GID。錯誤: ${error.message || error.toString()}</p>`;
+            }
+            
+            // 處理更新日期
+            const dateElement = document.getElementById('update-date');
+            let updateText = '無法獲取更新時間';
+            
+            if (lastModifiedDate) {
+                const date = new Date(lastModifiedDate);
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                updateText = `${year}/${month}/${day}`;
+            } else {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                updateText = `${year}/${month}/${day}`;
+            }
+            
+            if(dateElement) {
+                 dateElement.textContent = `最後更新日期 : ${updateText}`;
+            }
+        }
+
+        // 啟動主函數
+        loadAllSheets();
+    </script>
+</body>
+</html>
