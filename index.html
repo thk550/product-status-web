@@ -19,7 +19,15 @@
             margin-bottom: 14px; 
             table-layout: auto; /* 電腦版維持自動佈局 */
         } 
-        th, td { border: 1px solid #ddd; padding: 14px; text-align: center; font-size: 12px; word-wrap: break-word; }
+        th, td { 
+            border: 1px solid #ddd; 
+            padding: 14px; 
+            text-align: center; 
+            font-size: 12px; 
+            word-wrap: break-word;
+            /* 💥 應用到電腦版和手機版，確保寬度計算一致性 */
+            box-sizing: border-box; 
+        }
         th { background-color: #f2f2f2; }
 
 
@@ -37,10 +45,11 @@
 
             /* 2. 核心修正：固定佈局，並設定總寬度 */
             table {
-                width: 700px; /* 💥 總寬度設定為一個固定的像素值 */
+                /* 💥 調整總寬度為 650px，確保總和是精確的 */
+                width: 650px; 
                 max-width: none;
                 margin: 0;
-                table-layout: fixed; /* 💥 啟用固定佈局，確保欄位對齊 */
+                table-layout: fixed; /* 啟用固定佈局，確保欄位對齊 */
             }
             
             /* 3. 恢復表格 display 屬性 */
@@ -59,8 +68,7 @@
                 word-wrap: break-word; /* 允許長文字換行 */
                 white-space: normal; /* 允許文字換行 */
                 
-                /* 預設寬度設定 (如果沒有明確覆蓋，會使用這個寬度) */
-                width: 100px; 
+                /* 💥 box-sizing: border-box 已經移動到 table, th, td 的共同樣式中 */
             }
 
             /* 💥 產品名稱：給予較寬的空間 */
@@ -75,7 +83,7 @@
             
             /* 💥 日期相關欄位 (第三欄以後) */
             th:nth-child(n+3), td:nth-child(n+3) {
-                width: 120px; 
+                width: 160px; /* 調整為 160px (80+250+160+160=650) */
             }
             
             /* 5. 移除卡片模式的偽元素 */
