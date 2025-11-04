@@ -9,25 +9,25 @@
         body { font-family: Arial, sans-serif; margin: 30px; background-color: #f9f9f9; } 
         h1 { text-align: center; color: #196b24; font-size: 28pt; } 
         
-        .section-title { color: #196b24; font-size: 25pt; font-weight: bold; margin-top: 35px; text-align: center; }
-        .section-desc { color: #5e5e5e; font-size: 19pt; text-align: center; margin-bottom: 30px; }
-        #update-date { text-align: center; margin-top: 40px; font-size: 16pt; color: #555; }
+        .section-title { color: #196b24; font-size: 12pt; font-weight: bold; margin-top: 12px; text-align: center; }
+        .section-desc { color: #5e5e5e; font-size: 12pt; text-align: center; margin-bottom: 12px; }
+        #update-date { text-align: center; margin-top: 40px; font-size: 10pt; color: #555; }
 
-        table { width: 100%; border-collapse: collapse; margin-bottom: 35px; table-layout: auto; } 
-        th, td { border: 1px solid #ddd; padding: 18px; text-align: center; font-size: 22px; word-wrap: break-word; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 12px; table-layout: auto; } 
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; font-size: 10px; word-wrap: break-word; }
         th { background-color: #f2f2f2; }
 
 
         /* ==================== 手機響應式樣式 (< 768px) ==================== */
         @media screen and (max-width: 768px) {
             
-            body { margin: 15px; } 
+            body { margin: 12px; } 
             
             /* 讓表格居中，保持 90% 寬度 (恢復居中設定，如果內容太長，請移除 max-width: 90%) */
             table {
                 max-width: 90%; 
                 width: 100%;    
-                margin: 0 auto 20px auto; 
+                margin: 0 auto 12px auto; 
                 border: none; 
             }
 
@@ -45,7 +45,7 @@
             /* 3. 調整每一行 (<tr>) 的顯示，提供間距 */
             tr { 
                 border: 1px solid #ccc; 
-                margin-bottom: 15px; 
+                margin-bottom: 12px; 
                 height: auto; 
             }
             
@@ -56,12 +56,12 @@
                 position: relative; 
                 padding-left: 50%; 
                 text-align: right; 
-                font-size: 17px; 
+                font-size: 10px; 
                 min-height: 0; 
                 /* 💥 保持緊湊的垂直內邊距 */
                 padding-top: 5px; 
                 padding-bottom: 5px; 
-                padding-right: 10px;
+                padding-right: 5px;
             }
             
             /* 5. 顯示自定義的 data-label 標籤 */
@@ -75,7 +75,7 @@
                 white-space: normal; 
                 word-wrap: break-word; 
                 font-weight: bold; 
-                font-size: 16px;
+                font-size: 10px;
                 text-align: left; 
                 color: #333; 
             }
@@ -92,7 +92,7 @@
         <p style="text-align: center;">資料載入中...</p>
     </div>
     
-    <div class="section-title" style="margin-top: 50px;">停止販售</div>
+    <div class="section-title" style="margin-top: 10px;">停止販售</div>
     <p class="section-desc"> 感謝您的愛用，以下產品已售完，銷售完畢後不再供貨，謝謝！</p>
     
     <div id="data-container-discontinued">
@@ -238,3 +238,4 @@
     </script>
 </body>
 </html>
+
