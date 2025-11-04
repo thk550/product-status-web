@@ -35,12 +35,12 @@
                 margin: 0 auto 12px auto;
             }
 
-            /* 2. 核心修正：回歸自動佈局，並強制寬度自適應內容 */
+            /* 2. 核心修正：固定佈局，並設定總寬度 */
             table {
-                width: auto; /* 💥 讓寬度由內容決定，才能自適應 */
+                width: 700px; /* 💥 總寬度設定為一個固定的像素值 */
                 max-width: none;
                 margin: 0;
-                table-layout: auto; /* 💥 恢復自動佈局，確保寬度隨內容變化 */
+                table-layout: fixed; /* 💥 啟用固定佈局，確保欄位對齊 */
             }
             
             /* 3. 恢復表格 display 屬性 */
@@ -50,24 +50,32 @@
             }
             thead, tbody, tr { display: table-row; }
             
-            /* 4. 設置 th 和 td 屬性 */
-            th { 
+            /* 4. 設置 th 和 td 混合佈局的單元格寬度 */
+            th, td {
                 display: table-cell; 
-                padding: 10px; 
-                font-size: 12px; 
-                /* 💥 關鍵：強制 th 不換行，讓它根據表頭文字的最寬長度決定欄寬 */
-                white-space: nowrap; 
-            }
-            td { 
-                display: table-cell; 
-                border: 1px solid #ddd; 
-                padding: 10px; 
-                font-size: 12px; 
+                padding: 10px 5px; /* 縮減 padding 節省空間 */
+                font-size: 12px;
                 text-align: center;
-                /* 💥 關鍵：強制 td 不換行，讓瀏覽器計算其必要寬度 */
-                white-space: nowrap; 
-                word-wrap: normal; /* 確保不強制換行 */
-                /* 為了防止數據過長導致滾動條過長，可以考慮設定 max-width，但通常 white-space: nowrap 足夠 */
+                word-wrap: break-word; /* 允許長文字換行 */
+                white-space: normal; /* 允許文字換行 */
+                
+                /* 預設寬度設定 (如果沒有明確覆蓋，會使用這個寬度) */
+                width: 100px; 
+            }
+
+            /* 💥 產品名稱：給予較寬的空間 */
+            th:nth-child(2), td:nth-child(2) {
+                width: 250px; /* 設置「產品名稱」固定較大的寬度 */
+            }
+            
+            /* 💥 SKU (第一欄) */
+            th:nth-child(1), td:nth-child(1) {
+                width: 80px; 
+            }
+            
+            /* 💥 日期相關欄位 (第三欄以後) */
+            th:nth-child(n+3), td:nth-child(n+3) {
+                width: 120px; 
             }
             
             /* 5. 移除卡片模式的偽元素 */
@@ -101,20 +109,15 @@
     <p id="update-date"></p>
     
     <script>
-        // 🚨 數據連結定義 (使用您提供的 GID)
+        // 🚨 數據連結定義 (保持不變)
         const BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSfLe7v1HVWF-H0fLihDiBfl5kY7ux-WNsBIASi4xF9Oj9CzGiKPZAoETBStCnKFHWPc7WEqwfLf4Fs/pub?single=true&output=csv';
-
-        // 暫時性缺貨 (gid=0)
         const URL_TEMPORARY = BASE_URL + '&gid=0';
-        
-        // 停止販售 (gid=261938866)
         const URL_DISCONTINUED = BASE_URL + '&gid=261938866'; 
 
         // ----------------------------------------------------
-        // 數據渲染核心函數
+        // 數據渲染核心函數 (保持不變)
         // ----------------------------------------------------
 
-        // 渲染單一表格
         function renderTable(containerId, data) {
             const container = document.getElementById(containerId);
             
@@ -149,14 +152,11 @@
             container.innerHTML = tableHtml;
         }
 
-        // 強化後的 CSV 轉 JSON 函數 (最穩定版本)
         function parseCSV(csvText) {
             const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== '');
             if (lines.length <= 1) return [];
-
             const headerLine = lines[0].replace(/"/g, '');
             const headers = headerLine.split(',').map(header => header.trim());
-            
             const result = [];
 
             for (let i = 1; i < lines.length; i++) {
@@ -175,7 +175,6 @@
             return result;
         }
 
-        // 主加載函數
         async function loadAllSheets() {
             let lastModifiedDate = null;
             
