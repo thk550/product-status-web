@@ -5,16 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>產品供貨情形</title>
     <style>
-        /* ==================== 基礎與電腦版樣式 (維持不變) ==================== */
+        /* ==================== 基礎與電腦版樣式 ==================== */
         body { font-family: Arial, sans-serif; margin: 30px; background-color: #f9f9f9; } 
-        h1 { text-align: center; color: #196b24; font-size: 28pt; } 
+        h1 { text-align: center; color: #196b24; font-size: 30pt; /* +2pt */ } 
         
-        .section-title { color: #196b24; font-size: 12pt; font-weight: bold; margin-top: 12px; text-align: center; }
-        .section-desc { color: #5e5e5e; font-size: 12pt; text-align: center; margin-bottom: 12px; }
-        #update-date { text-align: center; margin-top: 40px; font-size: 10pt; color: #555; }
+        /* 💥 字體放大 */
+        .section-title { color: #196b24; font-size: 14pt; /* +2pt */ font-weight: bold; margin-top: 14px; text-align: center; }
+        .section-desc { color: #5e5e5e; font-size: 14pt; /* +2pt */ text-align: center; margin-bottom: 14px; }
+        #update-date { text-align: center; margin-top: 40px; font-size: 12pt; /* +2pt */ color: #555; }
 
-        table { width: 100%; border-collapse: collapse; margin-bottom: 12px; table-layout: auto; } 
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; font-size: 10px; word-wrap: break-word; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 14px; table-layout: auto; } 
+        /* 💥 字體放大 */
+        th, td { border: 1px solid #ddd; padding: 14px; text-align: center; font-size: 12px; /* +2px */ word-wrap: break-word; }
         th { background-color: #f2f2f2; }
 
 
@@ -30,36 +32,44 @@
                 margin: 0 auto 12px auto;
             }
 
-            /* 2. 💥 取消所有 display: block 的設定，讓表格恢復正常 */
+            /* 2. 取消所有 display: block 的設定，讓表格恢復正常 */
             table {
-                width: auto; /* 讓表格根據內容寬度決定 */
+                width: auto; 
                 max-width: none;
                 margin: 0;
             }
+            /* 💥 恢復表格 display 屬性 */
             table, thead, tbody, th, td, tr { 
-                display: table; /* 恢復正常表格顯示 */
+                display: table; 
                 width: auto;
             }
             
-            /* 3. 💥 確保表頭 (thead/th) 正常顯示，並讓 tbody 恢復正常 */
+            /* 3. 確保表頭 (thead/th) 正常顯示，並讓 tbody 恢復正常 */
             thead, tbody, tr { display: table-row; }
-            th { display: table-cell; }
+            th { 
+                display: table-cell; 
+                padding: 10px; /* 統一 padding */
+                font-size: 12px; /* 💥 字體放大 */
+                min-width: 100px; /* 💥 設置最小寬度確保對齊 */
+            }
             td { 
                 display: table-cell; 
-                border: 1px solid #ddd; /* 恢復邊框 */
-                padding: 8px; /* 稍微減少邊距以節省空間 */
-                font-size: 10px;
+                border: 1px solid #ddd; 
+                padding: 10px; /* 統一 padding */
+                font-size: 12px; /* 💥 字體放大 */
                 text-align: center;
-                white-space: nowrap; /* 💥 讓文字不換行以強制寬度，觸發滾動 */
+                /* 💥 解決對齊的關鍵：強制不換行，讓表格寬度由內容決定，然後由滾動條處理溢出 */
+                white-space: nowrap; 
+                min-width: 100px; /* 💥 設置最小寬度確保與表頭對齊 */
             }
             
-            /* 4. 💥 徹底移除卡片模式的偽元素（解決標籤重複問題） */
+            /* 4. 徹底移除卡片模式的偽元素（解決標籤重複問題） */
             thead tr, th {
-                position: static; /* 確保表頭位置正常 */
-                display: table-cell !important; /* 強制顯示 */
+                position: static; 
+                display: table-cell !important; 
             }
             td:before { 
-                content: none; /* 移除 data-label 模擬的表頭 */
+                content: none; 
             }
             
         }
@@ -187,38 +197,4 @@
                 const data2 = parseCSV(csvText2);
                 renderTable('data-container-discontinued', data2);
                 if (!lastModifiedDate) { 
-                    lastModifiedDate = response2.headers.get('Last-Modified');
-                }
-            } catch (error) {
-                console.error('載入「停止販售」失敗:', error);
-                document.getElementById('data-container-discontinued').innerHTML = `<p style="text-align: center; color: red;">載入停止販售資料失敗。請檢查 Google Sheets 連結或 GID。錯誤: ${error.message || error.toString()}</p>`;
-            }
-            
-            // 處理更新日期
-            const dateElement = document.getElementById('update-date');
-            let updateText = '無法獲取更新時間';
-            
-            if (lastModifiedDate) {
-                const date = new Date(lastModifiedDate);
-                const year = date.getFullYear();
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const day = String(date.getDate()).padStart(2, '0');
-                updateText = `${year}/${month}/${day}`;
-            } else {
-                const now = new Date();
-                const year = now.getFullYear();
-                const month = String(now.getMonth() + 1).padStart(2, '0');
-                const day = String(now.getDate()).padStart(2, '0');
-                updateText = `${year}/${month}/${day}`;
-            }
-            
-            if(dateElement) {
-                 dateElement.textContent = `最後更新日期 : ${updateText}`;
-            }
-        }
-
-        // 啟動主函數
-        loadAllSheets();
-    </script>
-</body>
-</html>
+                    lastModifiedDate = response
