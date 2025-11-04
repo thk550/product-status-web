@@ -17,7 +17,7 @@
             width: 100%; 
             border-collapse: collapse; 
             margin-bottom: 14px; 
-            table-layout: auto; /* 電腦版使用自動佈局 */
+            table-layout: auto; /* 電腦版維持自動佈局 */
         } 
         th, td { border: 1px solid #ddd; padding: 14px; text-align: center; font-size: 12px; word-wrap: break-word; }
         th { background-color: #f2f2f2; }
@@ -35,12 +35,12 @@
                 margin: 0 auto 12px auto;
             }
 
-            /* 2. 核心修正：啟用固定表格佈局和固定寬度 */
+            /* 2. 核心修正：回歸自動佈局，並強制寬度自適應內容 */
             table {
-                width: 900px; /* 設置一個寬於手機屏幕的固定寬度 */
+                width: auto; /* 💥 讓寬度由內容決定，才能自適應 */
                 max-width: none;
                 margin: 0;
-                table-layout: fixed; /* 啟用固定佈局，確保欄位對齊 */
+                table-layout: auto; /* 💥 恢復自動佈局，確保寬度隨內容變化 */
             }
             
             /* 3. 恢復表格 display 屬性 */
@@ -50,12 +50,13 @@
             }
             thead, tbody, tr { display: table-row; }
             
-            /* 4. 設置 th 和 td 固定的單元格寬度 */
+            /* 4. 設置 th 和 td 屬性 */
             th { 
                 display: table-cell; 
                 padding: 10px; 
                 font-size: 12px; 
-                width: 150px; /* 設置固定寬度 */
+                /* 💥 關鍵：強制 th 不換行，讓它根據表頭文字的最寬長度決定欄寬 */
+                white-space: nowrap; 
             }
             td { 
                 display: table-cell; 
@@ -63,9 +64,10 @@
                 padding: 10px; 
                 font-size: 12px; 
                 text-align: center;
-                white-space: normal; 
-                word-wrap: break-word; 
-                width: 150px; /* 設置固定寬度 */
+                /* 💥 關鍵：強制 td 不換行，讓瀏覽器計算其必要寬度 */
+                white-space: nowrap; 
+                word-wrap: normal; /* 確保不強制換行 */
+                /* 為了防止數據過長導致滾動條過長，可以考慮設定 max-width，但通常 white-space: nowrap 足夠 */
             }
             
             /* 5. 移除卡片模式的偽元素 */
@@ -159,10 +161,8 @@
 
             for (let i = 1; i < lines.length; i++) {
                 const row = lines[i];
-                // 使用正規表達式進行分割
                 const values = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(value => value.trim().replace(/"/g, ''));
                 
-                // 確保行不是完全空白
                 if (values.every(v => v === '')) continue; 
 
                 const obj = {};
