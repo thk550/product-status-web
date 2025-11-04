@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>產品供貨情形</title>
     <style>
-        /* ==================== 基礎與電腦版樣式 ==================== */
+        /* ==================== 基礎與電腦版樣式 (放大字體) ==================== */
         body { font-family: Arial, sans-serif; margin: 30px; background-color: #f9f9f9; } 
         h1 { text-align: center; color: #196b24; font-size: 30pt; } 
         
@@ -28,19 +28,19 @@
             
             body { margin: 12px; } 
             
-            /* 1. 新增容器：強制水平滾動 */
+            /* 1. 容器：強制水平滾動 */
             .table-responsive {
                 overflow-x: auto; 
                 width: 100%;     
                 margin: 0 auto 12px auto;
             }
 
-            /* 2. 💥 核心修正：啟用固定表格佈局 */
+            /* 2. 核心修正：啟用固定表格佈局和固定寬度 */
             table {
-                width: 900px; /* 💥 設置一個寬於手機屏幕的固定寬度 */
+                width: 900px; /* 設置一個寬於手機屏幕的固定寬度 */
                 max-width: none;
                 margin: 0;
-                table-layout: fixed; /* 💥 啟用固定佈局 */
+                table-layout: fixed; /* 啟用固定佈局，確保欄位對齊 */
             }
             
             /* 3. 恢復表格 display 屬性 */
@@ -50,12 +50,12 @@
             }
             thead, tbody, tr { display: table-row; }
             
-            /* 4. 💥 設置 th 和 td 固定的單元格寬度 */
+            /* 4. 設置 th 和 td 固定的單元格寬度 */
             th { 
                 display: table-cell; 
                 padding: 10px; 
                 font-size: 12px; 
-                width: 150px; /* 💥 設置固定寬度 */
+                width: 150px; /* 設置固定寬度 */
             }
             td { 
                 display: table-cell; 
@@ -63,9 +63,9 @@
                 padding: 10px; 
                 font-size: 12px; 
                 text-align: center;
-                white-space: normal; /* 💥 恢復正常換行，讓長內容在 150px 內換行 */
-                word-wrap: break-word; /* 確保長單字也能換行 */
-                width: 150px; /* 💥 設置固定寬度 */
+                white-space: normal; 
+                word-wrap: break-word; 
+                width: 150px; /* 設置固定寬度 */
             }
             
             /* 5. 移除卡片模式的偽元素 */
@@ -99,13 +99,23 @@
     <p id="update-date"></p>
     
     <script>
-        // ... (JavaScript 保持不變)
+        // 🚨 數據連結定義 (使用您提供的 GID)
         const BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSfLe7v1HVWF-H0fLihDiBfl5kY7ux-WNsBIASi4xF9Oj9CzGiKPZAoETBStCnKFHWPc7WEqwfLf4Fs/pub?single=true&output=csv';
+
+        // 暫時性缺貨 (gid=0)
         const URL_TEMPORARY = BASE_URL + '&gid=0';
+        
+        // 停止販售 (gid=261938866)
         const URL_DISCONTINUED = BASE_URL + '&gid=261938866'; 
 
+        // ----------------------------------------------------
+        // 數據渲染核心函數
+        // ----------------------------------------------------
+
+        // 渲染單一表格
         function renderTable(containerId, data) {
             const container = document.getElementById(containerId);
+            
             if (!data || data.length === 0 || (data.length > 0 && Object.keys(data[0]).length === 0)) {
                 if (containerId === 'data-container-discontinued') {
                      container.innerHTML = '<p style="text-align: center;">目前無停止販售的產品。</p>';
@@ -114,12 +124,15 @@
                 }
                 return;
             }
+
             const headers = Object.keys(data[0]);
             let tableHtml = '<table><thead><tr>';
+            
             headers.forEach(header => {
                 tableHtml += `<th>${header}</th>`;
             });
             tableHtml += '</tr></thead><tbody>';
+
             data.forEach(rowData => {
                 tableHtml += '<tr>';
                 headers.forEach(header => {
@@ -129,20 +142,29 @@
                 });
                 tableHtml += '</tr>';
             });
+
             tableHtml += '</tbody></table>';
             container.innerHTML = tableHtml;
         }
 
+        // 強化後的 CSV 轉 JSON 函數 (最穩定版本)
         function parseCSV(csvText) {
             const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== '');
             if (lines.length <= 1) return [];
+
             const headerLine = lines[0].replace(/"/g, '');
             const headers = headerLine.split(',').map(header => header.trim());
+            
             const result = [];
+
             for (let i = 1; i < lines.length; i++) {
                 const row = lines[i];
+                // 使用正規表達式進行分割
                 const values = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(value => value.trim().replace(/"/g, ''));
+                
+                // 確保行不是完全空白
                 if (values.every(v => v === '')) continue; 
+
                 const obj = {};
                 for (let j = 0; j < headers.length; j++) {
                     const header = headers[j];
@@ -153,29 +175,12 @@
             return result;
         }
 
+        // 主加載函數
         async function loadAllSheets() {
             let lastModifiedDate = null;
             
+            // 處理第一個工作表
             try {
                 const response1 = await fetch(URL_TEMPORARY);
                 if (!response1.ok) throw new Error(`HTTP Error: ${response1.status}`);
                 const csvText1 = await response1.text();
-                const data1 = parseCSV(csvText1);
-                renderTable('data-container-temporary', data1);
-                lastModifiedDate = response1.headers.get('Last-Modified');
-            } catch (error) {
-                console.error('載入「暫時性缺貨」失敗:', error);
-                document.getElementById('data-container-temporary').innerHTML = `<p style="text-align: center; color: red;">載入暫時性缺貨資料失敗。請檢查 Google Sheets 連結。錯誤: ${error.message || error.toString()}</p>`;
-            }
-
-            try {
-                const response2 = await fetch(URL_DISCONTINUED);
-                if (!response2.ok) throw new Error(`HTTP Error: ${response2.status}`);
-                const csvText2 = await response2.text();
-                const data2 = parseCSV(csvText2);
-                renderTable('data-container-discontinued', data2);
-                if (!lastModifiedDate) { 
-                    lastModifiedDate = response2.headers.get('Last-Modified');
-                }
-            } catch (error) {
-                console.error('
