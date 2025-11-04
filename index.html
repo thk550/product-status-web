@@ -7,16 +7,19 @@
     <style>
         /* ==================== 基礎與電腦版樣式 ==================== */
         body { font-family: Arial, sans-serif; margin: 30px; background-color: #f9f9f9; } 
-        h1 { text-align: center; color: #196b24; font-size: 30pt; /* +2pt */ } 
+        h1 { text-align: center; color: #196b24; font-size: 30pt; } 
         
-        /* 💥 字體放大 */
-        .section-title { color: #196b24; font-size: 14pt; /* +2pt */ font-weight: bold; margin-top: 14px; text-align: center; }
-        .section-desc { color: #5e5e5e; font-size: 14pt; /* +2pt */ text-align: center; margin-bottom: 14px; }
-        #update-date { text-align: center; margin-top: 40px; font-size: 12pt; /* +2pt */ color: #555; }
+        .section-title { color: #196b24; font-size: 14pt; font-weight: bold; margin-top: 14px; text-align: center; }
+        .section-desc { color: #5e5e5e; font-size: 14pt; text-align: center; margin-bottom: 14px; }
+        #update-date { text-align: center; margin-top: 40px; font-size: 12pt; color: #555; }
 
-        table { width: 100%; border-collapse: collapse; margin-bottom: 14px; table-layout: auto; } 
-        /* 💥 字體放大 */
-        th, td { border: 1px solid #ddd; padding: 14px; text-align: center; font-size: 12px; /* +2px */ word-wrap: break-word; }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-bottom: 14px; 
+            table-layout: auto; /* 電腦版使用自動佈局 */
+        } 
+        th, td { border: 1px solid #ddd; padding: 14px; text-align: center; font-size: 12px; word-wrap: break-word; }
         th { background-color: #f2f2f2; }
 
 
@@ -25,45 +28,47 @@
             
             body { margin: 12px; } 
             
-            /* 1. 💥 新增容器：強制水平滾動 */
+            /* 1. 新增容器：強制水平滾動 */
             .table-responsive {
-                overflow-x: auto; /* 允許內容水平滾動 */
-                width: 100%;     /* 佔滿容器寬度 */
+                overflow-x: auto; 
+                width: 100%;     
                 margin: 0 auto 12px auto;
             }
 
-            /* 2. 取消所有 display: block 的設定，讓表格恢復正常 */
+            /* 2. 💥 核心修正：啟用固定表格佈局 */
             table {
-                width: auto; 
+                width: 900px; /* 💥 設置一個寬於手機屏幕的固定寬度 */
                 max-width: none;
                 margin: 0;
+                table-layout: fixed; /* 💥 啟用固定佈局 */
             }
-            /* 💥 恢復表格 display 屬性 */
+            
+            /* 3. 恢復表格 display 屬性 */
             table, thead, tbody, th, td, tr { 
                 display: table; 
                 width: auto;
             }
-            
-            /* 3. 確保表頭 (thead/th) 正常顯示，並讓 tbody 恢復正常 */
             thead, tbody, tr { display: table-row; }
+            
+            /* 4. 💥 設置 th 和 td 固定的單元格寬度 */
             th { 
                 display: table-cell; 
-                padding: 10px; /* 統一 padding */
-                font-size: 12px; /* 💥 字體放大 */
-                min-width: 100px; /* 💥 設置最小寬度確保對齊 */
+                padding: 10px; 
+                font-size: 12px; 
+                width: 150px; /* 💥 設置固定寬度 */
             }
             td { 
                 display: table-cell; 
                 border: 1px solid #ddd; 
-                padding: 10px; /* 統一 padding */
-                font-size: 12px; /* 💥 字體放大 */
+                padding: 10px; 
+                font-size: 12px; 
                 text-align: center;
-                /* 💥 解決對齊的關鍵：強制不換行，讓表格寬度由內容決定，然後由滾動條處理溢出 */
-                white-space: nowrap; 
-                min-width: 100px; /* 💥 設置最小寬度確保與表頭對齊 */
+                white-space: normal; /* 💥 恢復正常換行，讓長內容在 150px 內換行 */
+                word-wrap: break-word; /* 確保長單字也能換行 */
+                width: 150px; /* 💥 設置固定寬度 */
             }
             
-            /* 4. 徹底移除卡片模式的偽元素（解決標籤重複問題） */
+            /* 5. 移除卡片模式的偽元素 */
             thead tr, th {
                 position: static; 
                 display: table-cell !important; 
@@ -71,7 +76,6 @@
             td:before { 
                 content: none; 
             }
-            
         }
     </style>
 </head>
@@ -95,24 +99,13 @@
     <p id="update-date"></p>
     
     <script>
-        // 🚨 數據連結定義 (使用您提供的 GID)
+        // ... (JavaScript 保持不變)
         const BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSfLe7v1HVWF-H0fLihDiBfl5kY7ux-WNsBIASi4xF9Oj9CzGiKPZAoETBStCnKFHWPc7WEqwfLf4Fs/pub?single=true&output=csv';
-
-        // 暫時性缺貨 (gid=0)
         const URL_TEMPORARY = BASE_URL + '&gid=0';
-        
-        // 停止販售 (gid=261938866)
         const URL_DISCONTINUED = BASE_URL + '&gid=261938866'; 
 
-        // ----------------------------------------------------
-        // 數據渲染核心函數
-        // ----------------------------------------------------
-
-        // 渲染單一表格
         function renderTable(containerId, data) {
-            // 由於 HTML 結構變更，現在要針對 .table-responsive 裡面的第一個 div/p 進行替換
             const container = document.getElementById(containerId);
-            
             if (!data || data.length === 0 || (data.length > 0 && Object.keys(data[0]).length === 0)) {
                 if (containerId === 'data-container-discontinued') {
                      container.innerHTML = '<p style="text-align: center;">目前無停止販售的產品。</p>';
@@ -121,15 +114,12 @@
                 }
                 return;
             }
-
             const headers = Object.keys(data[0]);
             let tableHtml = '<table><thead><tr>';
-            
             headers.forEach(header => {
                 tableHtml += `<th>${header}</th>`;
             });
             tableHtml += '</tr></thead><tbody>';
-
             data.forEach(rowData => {
                 tableHtml += '<tr>';
                 headers.forEach(header => {
@@ -139,29 +129,20 @@
                 });
                 tableHtml += '</tr>';
             });
-
             tableHtml += '</tbody></table>';
             container.innerHTML = tableHtml;
         }
 
-        // 強化後的 CSV 轉 JSON 函數 (最穩定版本)
         function parseCSV(csvText) {
             const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== '');
             if (lines.length <= 1) return [];
-
             const headerLine = lines[0].replace(/"/g, '');
             const headers = headerLine.split(',').map(header => header.trim());
-            
             const result = [];
-
             for (let i = 1; i < lines.length; i++) {
                 const row = lines[i];
-                // 使用正規表達式進行分割
                 const values = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(value => value.trim().replace(/"/g, ''));
-                
-                // 確保行不是完全空白
                 if (values.every(v => v === '')) continue; 
-
                 const obj = {};
                 for (let j = 0; j < headers.length; j++) {
                     const header = headers[j];
@@ -172,11 +153,9 @@
             return result;
         }
 
-        // 主加載函數
         async function loadAllSheets() {
             let lastModifiedDate = null;
             
-            // 處理第一個工作表
             try {
                 const response1 = await fetch(URL_TEMPORARY);
                 if (!response1.ok) throw new Error(`HTTP Error: ${response1.status}`);
@@ -189,7 +168,6 @@
                 document.getElementById('data-container-temporary').innerHTML = `<p style="text-align: center; color: red;">載入暫時性缺貨資料失敗。請檢查 Google Sheets 連結。錯誤: ${error.message || error.toString()}</p>`;
             }
 
-            // 處理第二個工作表
             try {
                 const response2 = await fetch(URL_DISCONTINUED);
                 if (!response2.ok) throw new Error(`HTTP Error: ${response2.status}`);
@@ -197,4 +175,7 @@
                 const data2 = parseCSV(csvText2);
                 renderTable('data-container-discontinued', data2);
                 if (!lastModifiedDate) { 
-                    lastModifiedDate = response
+                    lastModifiedDate = response2.headers.get('Last-Modified');
+                }
+            } catch (error) {
+                console.error('
